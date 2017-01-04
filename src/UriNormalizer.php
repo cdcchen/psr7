@@ -119,11 +119,11 @@ final class UriNormalizer
     public static function normalize(UriInterface $uri, $flags = self::PRESERVING_NORMALIZATIONS)
     {
         if ($flags & self::CAPITALIZE_PERCENT_ENCODING) {
-            $uri = self::capitalizePercentEncoding($uri);
+            $uri = static::capitalizePercentEncoding($uri);
         }
 
         if ($flags & self::DECODE_UNRESERVED_CHARACTERS) {
-            $uri = self::decodeUnreservedCharacters($uri);
+            $uri = static::decodeUnreservedCharacters($uri);
         }
 
         if ($flags & self::CONVERT_EMPTY_PATH && $uri->getPath() === '' &&
@@ -153,7 +153,7 @@ final class UriNormalizer
             sort($queryKeyValues);
             $uri = $uri->withQuery(implode('&', $queryKeyValues));
         }
-        
+
         return $uri;
     }
 
@@ -177,25 +177,33 @@ final class UriNormalizer
         UriInterface $uri2,
         $normalizations = self::PRESERVING_NORMALIZATIONS
     ) {
-        return (string)self::normalize($uri1, $normalizations) === (string)self::normalize($uri2, $normalizations);
+        return (string)static::normalize($uri1, $normalizations) === (string)static::normalize($uri2, $normalizations);
     }
 
+    /**
+     * @param UriInterface $uri
+     * @return UriInterface
+     */
     private static function capitalizePercentEncoding(UriInterface $uri)
     {
         $regex = '/(?:%[A-Fa-f0-9]{2})++/';
-        $callback = function (array $match) {
-            return strtoupper($match[0]);
+        $callback = function (array $matches) {
+            return strtoupper($matches[0]);
         };
 
         return $uri->withPath(preg_replace_callback($regex, $callback, $uri->getPath()))
                    ->withQuery(preg_replace_callback($regex, $callback, $uri->getQuery()));
     }
 
+    /**
+     * @param UriInterface $uri
+     * @return UriInterface
+     */
     private static function decodeUnreservedCharacters(UriInterface $uri)
     {
         $regex = '/%(?:2D|2E|5F|7E|3[0-9]|[46][1-9A-F]|[57][0-9A])/i';
-        $callback = function (array $match) {
-            return rawurldecode($match[0]);
+        $callback = function (array $matches) {
+            return rawurldecode($matches[0]);
         };
 
         return $uri->withPath(preg_replace_callback($regex, $callback, $uri->getPath()))

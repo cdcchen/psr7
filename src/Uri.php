@@ -88,7 +88,7 @@ class Uri implements UriInterface
         if (!empty($uri)) {
             $parts = parse_url($uri);
             if ($parts === false) {
-                throw new \InvalidArgumentException("String: $uri is not a valid URI string.");
+                throw new \InvalidArgumentException("$uri is not a valid URI.");
             }
             $this->applyParts($parts);
         }
@@ -126,16 +126,29 @@ class Uri implements UriInterface
      */
     private function applyParts(array $parts)
     {
-        $this->scheme = isset($parts['scheme']) ? $this->filterScheme($parts['scheme']) : '';
-        $this->userInfo = isset($parts['user']) ? $parts['user'] : '';
-        $this->host = isset($parts['host']) ? $this->filterHost($parts['host']) : '';
-        $this->port = isset($parts['port']) ? $this->filterPort($parts['port']) : null;
-        $this->path = isset($parts['path']) ? $this->filterPath($parts['path']) : '';
-        $this->query = isset($parts['query']) ? $this->filterQueryAndFragment($parts['query']) : '';
-        $this->fragment = isset($parts['fragment']) ? $this->filterQueryAndFragment($parts['fragment']) : '';
-
+        if (!empty($parts['scheme'])) {
+            $this->scheme = $this->filterScheme($parts['scheme']);
+        }
+        if (!empty($parts['user'])) {
+            $this->userInfo = $parts['user'];
+        }
         if (isset($parts['pass'])) {
             $this->userInfo .= ':' . $parts['pass'];
+        }
+        if (!empty($parts['host'])) {
+            $this->host = $this->filterHost($parts['host']);
+        }
+        if (!empty($parts['port'])) {
+            $this->port = $this->filterPort($parts['port']);
+        }
+        if (!empty($parts['path'])) {
+            $this->path = $this->filterPath($parts['path']);
+        }
+        if (!empty($parts['query'])) {
+            $this->query = $this->filterQueryAndFragment($parts['query']);
+        }
+        if (!empty($parts['fragment'])) {
+            $this->fragment = $this->filterQueryAndFragment($parts['fragment']);
         }
 
         $this->removeDefaultPort();
@@ -151,24 +164,25 @@ class Uri implements UriInterface
      */
     public static function buildUriString($scheme, $authority, $path, $query, $fragment)
     {
-        $str = '';
-        if ($scheme) {
-            $str .= $scheme . ':';
+        $uri = '';
+
+        if (!empty($scheme)) {
+            $uri .= $scheme . ':';
         }
-        if ($authority) {
-            $str .= '//' . $authority;
+        if (!empty($authority) || $scheme === 'file') {
+            $uri .= '//' . $authority;
         }
 
-        $str .= $path;
+        $uri .= $path;
 
-        if ($query) {
-            $str .= '?' . $query;
+        if (!empty($query)) {
+            $uri .= '?' . $query;
         }
-        if ($fragment) {
-            $str .= '#' . $fragment;
+        if (!empty($fragment)) {
+            $uri .= '#' . $fragment;
         }
 
-        return $str;
+        return $uri;
     }
 
     /**
@@ -185,7 +199,7 @@ class Uri implements UriInterface
     public function getAuthority()
     {
         $authority = $this->host;
-        if (empty($this->userInfo)) {
+        if (!empty($this->userInfo)) {
             $authority = $this->userInfo . '@' . $authority;
         }
         if ($this->port !== null) {
@@ -309,10 +323,8 @@ class Uri implements UriInterface
      */
     public static function isAbsolutePathReference(UriInterface $uri)
     {
-        return $uri->getScheme() === ''
-            && $uri->getAuthority() === ''
-            && isset($uri->getPath()[0])
-            && $uri->getPath()[0] === '/';
+        return $uri->getScheme() === '' && $uri->getAuthority() === ''
+            && isset($uri->getPath()[0]) && $uri->getPath()[0] === '/';
     }
 
     /**
@@ -327,8 +339,7 @@ class Uri implements UriInterface
      */
     public static function isRelativePathReference(UriInterface $uri)
     {
-        return $uri->getScheme() === ''
-            && $uri->getAuthority() === ''
+        return $uri->getScheme() === '' && $uri->getAuthority() === ''
             && (!isset($uri->getPath()[0]) || $uri->getPath()[0] !== '/');
     }
 
@@ -354,41 +365,8 @@ class Uri implements UriInterface
                 && ($uri->getPath() === $base->getPath())
                 && ($uri->getQuery() === $base->getQuery());
         }
+
         return $uri->getScheme() === '' && $uri->getAuthority() === '' && $uri->getPath() === '' && $uri->getQuery() === '';
-    }
-
-    /**
-     * Removes dot segments from a path and returns the new path.
-     *
-     * @param string $path
-     *
-     * @return string
-     *
-     * @deprecated since version 1.4. Use UriResolver::removeDotSegments instead.
-     * @see UriResolver::removeDotSegments
-     */
-    public static function removeDotSegments($path)
-    {
-        return UriResolver::removeDotSegments($path);
-    }
-
-    /**
-     * Converts the relative URI into a new URI that is resolved against the base URI.
-     *
-     * @param UriInterface $base Base URI
-     * @param string|UriInterface $rel Relative URI
-     *
-     * @return UriInterface
-     *
-     * @deprecated since version 1.4. Use UriResolver::resolve instead.
-     * @see UriResolver::resolve
-     */
-    public static function resolve(UriInterface $base, $rel)
-    {
-        if (!($rel instanceof UriInterface)) {
-            $rel = new self($rel);
-        }
-        return UriResolver::resolve($base, $rel);
     }
 
     /**
@@ -399,13 +377,15 @@ class Uri implements UriInterface
     public static function withoutQueryValue(UriInterface $uri, $key)
     {
         $current = $uri->getQuery();
-        if ($current == '') {
+        if ($current === '') {
             return $uri;
         }
+
         $decodedKey = rawurldecode($key);
         $result = array_filter(explode('&', $current), function ($part) use ($decodedKey) {
             return rawurldecode(explode('=', $part)[0]) !== $decodedKey;
         });
+
         return $uri->withQuery(implode('&', $result));
     }
 
@@ -418,7 +398,7 @@ class Uri implements UriInterface
     public static function withQueryValue(UriInterface $uri, $key, $value)
     {
         $current = $uri->getQuery();
-        if ($current == '') {
+        if ($current === '') {
             $result = [];
         } else {
             $decodedKey = rawurldecode($key);
@@ -426,12 +406,13 @@ class Uri implements UriInterface
                 return rawurldecode(explode('=', $part)[0]) !== $decodedKey;
             });
         }
+
         // Query string separators ("=", "&") within the key or value need to be encoded
         // (while preventing double-encoding) before setting the query string. All other
         // chars that need percent-encoding will be encoded by withQuery().
         $key = strtr($key, self::$replaceQuery);
         if ($value !== null) {
-            $result[] = $key . '=' . strtr($value, self::$replaceQuery);
+            $result[] = $key . '=' . rawurlencode($value);
         } else {
             $result[] = $key;
         }
@@ -602,14 +583,15 @@ class Uri implements UriInterface
             return null;
         }
         $port = (int)$port;
-        if (1 > $port || 0xffff < $port) {
+        if ($port < 1 || $port > 0xffff) {
             throw new \InvalidArgumentException(sprintf('Invalid port: %d. Must be between 1 and 65535', $port));
         }
+
         return $port;
     }
 
     /**
-     *
+     * Remove port value if it is default port.
      */
     private function removeDefaultPort()
     {
@@ -630,7 +612,9 @@ class Uri implements UriInterface
 
         return preg_replace_callback(
             '/(?:[^' . self::$charUnreserved . self::$charSubDelimiters . '%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
-            [$this, 'rawUrlEncode'],
+            function (array $matches) {
+                return rawurlencode($matches[0]);
+            },
             $path
         );
     }
@@ -646,18 +630,11 @@ class Uri implements UriInterface
         }
         return preg_replace_callback(
             '/(?:[^' . self::$charUnreserved . self::$charSubDelimiters . '%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
-            [$this, 'rawUrlEncode'],
+            function (array $matches) {
+                return rawurlencode($matches[0]);
+            },
             $str
         );
-    }
-
-    /**
-     * @param array $match
-     * @return string
-     */
-    private static function rawUrlEncode(array $match)
-    {
-        return rawurlencode($match[0]);
     }
 
     /**
@@ -670,10 +647,10 @@ class Uri implements UriInterface
         }
 
         if ($this->getAuthority() === '') {
-            if (0 === strpos($this->path, '//')) {
+            if (strpos($this->path, '//') === 0) {
                 throw new \InvalidArgumentException('The path of a URI without an authority must not start with two slashes "//"');
             }
-            if ($this->scheme === '' && false !== strpos(explode('/', $this->path, 2)[0], ':')) {
+            if ($this->scheme === '' && strpos(explode('/', $this->path, 2)[0], ':') !== false) {
                 throw new \InvalidArgumentException('A relative URI must not have a path beginning with a segment containing a colon');
             }
         } elseif (isset($this->path[0]) && $this->path[0] !== '/') {
