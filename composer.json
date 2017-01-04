@@ -1,0 +1,44 @@
+{
+  "name": "cdcchen/psr7",
+  "type": "library",
+  "description": "PSR-7 HTTP message library",
+  "keywords": [
+    "psr7",
+    "http-message",
+    "php-stream",
+    "http",
+    "uri",
+    "stream",
+    "message",
+    "request",
+    "response"
+  ],
+  "license": "BSD",
+  "authors": [
+    {
+      "name": "Dong Chen",
+      "email": "cdcchen@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.6",
+    "psr/http-message": "~1.0",
+    "fig/http-message-util": "^1.0"
+  },
+  "provide": {
+    "psr/http-message": "1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "cdcchen\\psr7\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.x-dev"
+    }
+  },
+  "require-dev": {
+    "phpspec/phpspec": "^3.1"
+  }
+}
