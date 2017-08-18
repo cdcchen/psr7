@@ -34,3 +34,6 @@ phpunit.phar
 /node_modules
 
 tests/_output/*
+
+# bin
+bin/
