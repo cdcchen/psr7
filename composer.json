@@ -28,6 +28,9 @@
   "provide": {
     "psr/http-message": "1.0"
   },
+  "config": {
+    "bin-dir": "bin"
+  },
   "autoload": {
     "psr-4": {
       "cdcchen\\psr7\\": "src/"
