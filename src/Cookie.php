@@ -70,18 +70,19 @@ class Cookie
         $cookie = "{$this->name}={$this->value}";
         if ($this->expires !== 0) {
             $cookie .= '; expires=' . gmdate(DATE_COOKIE, $this->expires);
+            $cookie .= '; Max-Age=' . $this->expires;
         }
         if ($this->path) {
             $cookie .= '; path=' . $this->path;
         }
         if ($this->domain) {
-            $cookie .= '; domain' . $this->domain;
+            $cookie .= '; domain=' . $this->domain;
         }
         if ($this->httpOnly) {
-            $cookie .= '; httponly';
+            $cookie .= '; HttpOnly';
         }
         if ($this->secure) {
-            $cookie .= '; secure';
+            $cookie .= '; Secure';
         }
 
         return $cookie;

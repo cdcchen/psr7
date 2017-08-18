@@ -127,4 +127,12 @@ class CookieCollection implements \Countable, \IteratorAggregate
 
         return $cookies;
     }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return join(', ', $this->getValues());
+    }
 }
