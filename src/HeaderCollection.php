@@ -137,6 +137,7 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
+     * Alias of all()
      * @return array
      */
     public function toArray()
@@ -190,6 +191,26 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
     public function count()
     {
         return count($this->headers);
+    }
+
+    /**
+     * @return array
+     */
+    public function getLines()
+    {
+        $lines = [];
+        foreach ($this->headers as $name => $value) {
+            if (strtolower($name) === 'set-cookie') {
+                $cookies = array_map(function ($item) {
+                    return 'Set-Cookie: ' . $item;
+                }, $value);
+                $lines = array_merge($lines, $cookies);
+            } else {
+                $lines[] = $name . ': ' . implode(', ', $value);
+            }
+        }
+
+        return $lines;
     }
 
     /**
