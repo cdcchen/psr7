@@ -39,63 +39,67 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $name
+     * @param string $value
      */
     public function set($name, $value)
     {
-        $normalized = strtolower($name);
+        $normalized = static::normalizeName($name);
         $this->headerNames[$normalized] = $name;
         $this->headers[$name] = static::filterHeaderValues((array)$value);
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $name
+     * @param string $value
      */
     public function unshift($name, $value)
     {
-        $normalized = strtolower($name);
+        $normalized = static::normalizeName($name);
         $this->headerNames[$normalized] = $name;
         $this->headers = [$name => static::filterHeaderValues((array)$value)] + $this->headers;
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $name
+     * @param string $value
      */
     public function add($name, $value)
     {
-        $normalized = strtolower($name);
-        $headerName = $this->headerNames[$normalized];
+        $normalized = static::normalizeName($name);
         $value = static::filterHeaderValues((array)$value);
 
         if ($this->has($name)) {
+            $headerName = $this->headerNames[$normalized];
             $this->headers[$headerName] = array_merge($this->headers[$headerName], $value);
         } else {
-            $this->headers[$headerName] = $value;
+            $this->headers[$name] = $value;
         }
     }
 
     /**
-     * @param $name
-     * @return mixed|null
+     * @param string $name
+     * @return string|null
      */
     public function get($name)
     {
-        $normalized = strtolower($name);
-        $headerName = $this->headerNames[$normalized];
+        if ($this->has($name)) {
+            $normalized = static::normalizeName($name);
+            $headerName = $this->headerNames[$normalized];
+            return isset($this->headers[$headerName]) ? $this->headers[$headerName] : null;
+        }
 
-        return isset($this->headers[$headerName]) ? $this->headers[$headerName] : null;
+        return null;
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @return bool
      */
     public function has($name)
     {
-        return isset($this->headerNames[strtolower($name)]);
+        $normalized = static::normalizeName($name);
+        return isset($this->headerNames[$normalized]);
     }
 
     /**
@@ -103,9 +107,11 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function remove($name)
     {
-        $normalized = strtolower($name);
-        $headerName = $this->headerNames[$normalized];
-        unset($this->headers[$headerName], $this->headerNames[$normalized]);
+        if ($this->has($name)) {
+            $normalized = static::normalizeName($name);
+            $headerName = $this->headerNames[$normalized];
+            unset($this->headers[$headerName], $this->headerNames[$normalized]);
+        }
     }
 
     /**
@@ -131,9 +137,9 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
     {
         if ($this->has('host')) {
             return $this->get('Host')[0];
-        } else {
-            return '';
         }
+
+        return '';
     }
 
     /**
@@ -200,7 +206,7 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
     {
         $lines = [];
         foreach ($this->headers as $name => $value) {
-            if (strtolower($name) === 'set-cookie') {
+            if (static::normalizeName($name) === 'set-cookie') {
                 $cookies = array_map(function ($item) {
                     return 'Set-Cookie: ' . $item;
                 }, $value);
@@ -220,7 +226,7 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
     {
         $header = '';
         foreach ($this->headers as $name => $value) {
-            if (strtolower($name) === 'set-cookie') {
+            if (static::normalizeName($name) === 'set-cookie') {
                 $header .= array_reduce($value, function ($carry, $item) use ($name) {
                     $carry .= Message::HEADER_LINE_EOF . $name . ': ' . $item;
                     return $carry;
@@ -243,5 +249,14 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
             $value = trim($value, " \t");
         });
         return $values;
+    }
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    private static function normalizeName($name)
+    {
+        return strtolower($name);
     }
 }
