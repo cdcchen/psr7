@@ -112,7 +112,7 @@ class Response extends Message implements ResponseInterface, StatusCodeInterface
         $this->statusCode = $status;
         $this->setHeaders($headers ?: new HeaderCollection());
 
-        if ($body === '' || $body === null) {
+        if ($body !== '' && $body === null && $body !== false) {
             $this->stream = StreamHelper::createStream($body);
         }
 

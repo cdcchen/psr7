@@ -52,7 +52,7 @@ class Request extends Message implements RequestInterface, RequestMethodInterfac
             $this->updateHostFromUri();
         }
 
-        if ($body !== '' && $body !== null) {
+        if ($body !== '' && $body !== null && $body !== false) {
             $this->stream = StreamHelper::createStream($body);
         }
 
