@@ -66,14 +66,14 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function add($name, $value)
     {
-        $normalized = static::normalizeName($name);
         $value = static::filterHeaderValues((array)$value);
 
         if ($this->has($name)) {
+            $normalized = static::normalizeName($name);
             $headerName = $this->headerNames[$normalized];
             $this->headers[$headerName] = array_merge($this->headers[$headerName], $value);
         } else {
-            $this->headers[$name] = $value;
+            $this->set($name, $value);
         }
     }
 
@@ -87,6 +87,21 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
             $normalized = static::normalizeName($name);
             $headerName = $this->headerNames[$normalized];
             return isset($this->headers[$headerName]) ? $this->headers[$headerName] : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $name
+     * @return null|string
+     */
+    public function getLine($name)
+    {
+        if ($this->has($name)) {
+            $normalized = static::normalizeName($name);
+            $headerName = $this->headerNames[$normalized];
+            return implode(', ', $this->headers[$headerName]);
         }
 
         return null;
