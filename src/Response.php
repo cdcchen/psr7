@@ -11,6 +11,7 @@ namespace cdcchen\psr7;
 
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * Class Response
@@ -112,13 +113,13 @@ class Response extends Message implements ResponseInterface, StatusCodeInterface
         $this->statusCode = $status;
         $this->setHeaders($headers ?: new HeaderCollection());
 
-        if ($body !== '' && $body !== null && $body !== false) {
+        if ($body instanceof StreamInterface) {
+            $this->stream = $body;
+        } elseif ($body !== '' && $body !== null && $body !== false) {
             $this->stream = StreamHelper::createStream($body);
         }
 
-        if (!empty($version)) {
-            $this->protocol = $version;
-        }
+        $this->protocol = $version;
 
         if (empty($this->reasonPhrase = $reason)) {
             $this->reasonPhrase = static::defaultReasonPhrase($this->statusCode);
@@ -165,6 +166,10 @@ class Response extends Message implements ResponseInterface, StatusCodeInterface
         return $this->reasonPhrase;
     }
 
+    /**
+     * @param int $statusCode
+     * @return string
+     */
     protected static function defaultReasonPhrase($statusCode)
     {
         if (isset(static::$reasonPhrases[$statusCode])) {

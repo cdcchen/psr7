@@ -25,26 +25,17 @@ class HeaderParser
             throw new \InvalidArgumentException('Header data is not parsed. Argument must be a string or array.');
         }
 
-        return static::parseLines($lines);
-    }
-
-    /**
-     * @param array $lines
-     * @return HeaderCollection
-     */
-    private static function parseLines(array $lines)
-    {
-        $headers = [];
+        $headers = new HeaderCollection;
         foreach ($lines as $line) {
             $header = explode(':', $line, 2);
             array_walk($header, function (&$item, $key) {
                 $item = trim($item);
             });
 
-            $key = ucwords($header[0], ' -_');
-            $headers[$key] = $header[1] ?: [];
+            $name = ucwords($header[0], ' -_');
+            $headers->add($name, ($header[1] === '') ? [] : $header[1]);
         }
 
-        return new HeaderCollection($headers);
+        return $headers;
     }
 }

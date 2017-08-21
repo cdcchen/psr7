@@ -11,6 +11,7 @@ namespace cdcchen\psr7;
 
 use Fig\Http\Message\RequestMethodInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -37,26 +38,35 @@ class Request extends Message implements RequestInterface, RequestMethodInterfac
      * @param string $method
      * @param string $uri
      * @param HeaderCollection $headers
-     * @param null|mixed $body
+     * @param StreamInterface|resource||string|null $body
      * @param string $version
      */
     public function __construct($method, $uri, HeaderCollection $headers = null, $body = null, $version = '1.1')
     {
         $this->method = strtoupper($method);
-        if (!($uri instanceof UriInterface)) {
-            $uri = new Uri($uri);
-        }
-        $this->uri = $uri;
+        $this->uri = ($uri instanceof UriInterface) ? $uri : new Uri($uri);
         $this->setHeaders($headers ?: new HeaderCollection());
+
         if (!$this->hasHeader('Host')) {
             $this->updateHostFromUri();
         }
 
-        if ($body !== '' && $body !== null && $body !== false) {
+        if ($body instanceof StreamInterface) {
+            $this->stream = $body;
+        } elseif ($body !== '' && $body !== null && $body !== false) {
             $this->stream = StreamHelper::createStream($body);
         }
 
         $this->protocol = $version;
+
+        $this->init();
+    }
+
+    /**
+     * Init after __construct
+     */
+    protected function init()
+    {
     }
 
     /**

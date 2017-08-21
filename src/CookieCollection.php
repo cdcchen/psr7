@@ -70,12 +70,12 @@ class CookieCollection implements \Countable, \IteratorAggregate
         if ($cookie instanceof Cookie) {
             $cookie->expires = 1;
             $cookie->value = '';
+        } elseif (is_string($cookie)) {
+            $cookie = new Cookie($cookie, '', 1);
         } else {
-            $cookie = new Cookie([
-                'name' => $cookie,
-                'expires' => 1,
-            ]);
+            throw new \InvalidArgumentException('Argument $cookie type must be string or Cookie.');
         }
+
         if ($fromBrowser) {
             $this->cookies[$cookie->name] = $cookie;
         } else {
@@ -92,7 +92,7 @@ class CookieCollection implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @return array|Cookie[]
+     * @return Cookie[]
      */
     public function all()
     {
@@ -116,7 +116,7 @@ class CookieCollection implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getValues()
     {
@@ -129,10 +129,15 @@ class CookieCollection implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @return string
+     * @return string[]
      */
-    public function __toString()
+    public function getLines()
     {
-        return join(', ', $this->getValues());
+        $lines = [];
+        foreach ($this->cookies as $cookie) {
+            $lines[] = 'Set-Cookie: ' . (string)$cookie;
+        }
+
+        return $lines;
     }
 }

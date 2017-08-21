@@ -9,8 +9,22 @@
 namespace cdcchen\psr7;
 
 
+/**
+ * Class Cookie
+ * @package cdcchen\psr7
+ */
 class Cookie
 {
+    /**
+     * Cookie constructor.
+     * @param string $name
+     * @param string $value
+     * @param int $expires
+     * @param string $path
+     * @param string $domain
+     * @param bool $secure
+     * @param bool $httpOnly
+     */
     public function __construct(
         $name,
         $value = '',
@@ -18,14 +32,15 @@ class Cookie
         $path = '/',
         $domain = '',
         $secure = false,
-        $httpOnly = true
+        $httpOnly = false
     ) {
-        $this->name = $name;
-        $this->value = $value;
-        $this->expires = $expires;
-        $this->path = $path;
-        $this->secure = $secure;
-        $this->httpOnly = $httpOnly;
+        $this->name = (string)$name;
+        $this->value = (string)$value;
+        $this->expires = (int)$expires;
+        $this->path = (string)$path;
+        $this->domain = (string)$domain;
+        $this->secure = (bool)$secure;
+        $this->httpOnly = (bool)$httpOnly;
     }
 
     /**
@@ -69,14 +84,14 @@ class Cookie
     {
         $cookie = "{$this->name}={$this->value}";
         if ($this->expires !== 0) {
-            $cookie .= '; expires=' . gmdate(DATE_COOKIE, $this->expires);
+            $cookie .= '; Expires=' . gmdate(DATE_COOKIE, $this->expires);
             $cookie .= '; Max-Age=' . $this->expires;
         }
         if ($this->path) {
-            $cookie .= '; path=' . $this->path;
+            $cookie .= '; Path=' . $this->path;
         }
         if ($this->domain) {
-            $cookie .= '; domain=' . $this->domain;
+            $cookie .= '; Domain=' . $this->domain;
         }
         if ($this->httpOnly) {
             $cookie .= '; HttpOnly';

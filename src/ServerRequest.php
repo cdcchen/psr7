@@ -51,6 +51,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      * @param null|Stream $body
      * @param string $version
      * @param array $serverParams
+     * @param array $cookieParams
      */
     public function __construct(
         $method,
@@ -58,10 +59,16 @@ class ServerRequest extends Request implements ServerRequestInterface
         HeaderCollection $headers = null,
         $body = null,
         $version = '1.1',
-        array $serverParams = []
+        array $serverParams = [],
+        array $cookieParams = []
     ) {
-        $this->serverParams = $serverParams;
         parent::__construct($method, $uri, $headers, $body, $version);
+        $this->serverParams = $serverParams;
+
+        $cookieLine = $headers->getLine('Cookie');
+        if ($cookieLine !== null) {
+            $this->cookieParams = array_merge(CookieParser::parse($cookieLine), $cookieParams);
+        }
     }
 
     /**

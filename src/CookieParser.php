@@ -24,18 +24,9 @@ class CookieParser
     public static function parse($header)
     {
         if (!is_string($header)) {
-            throw new InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
+            throw new InvalidArgumentException('Cannot parse cookie data, cookie value must be a string.');
         }
 
-        return static::parseHeader($header);
-    }
-
-    /**
-     * @param string $header
-     * @return array
-     */
-    private static function parseHeader($header)
-    {
         $header = rtrim($header, "\r\n");
         $pieces = preg_split('/\s*[;,]\s*/', $header);
         $cookies = [];
@@ -49,6 +40,7 @@ class CookieParser
                 }
             }
         }
+        
         return $cookies;
     }
 }

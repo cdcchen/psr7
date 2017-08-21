@@ -21,7 +21,7 @@ class Message implements MessageInterface
     /**
      * The header and the body of the separator
      */
-    const HTTP_EOF = "\r\n\r\n";
+    const HEADER_EOF = "\r\n\r\n";
     /**
      * Header line eol
      */
@@ -82,15 +82,11 @@ class Message implements MessageInterface
 
     /**
      * @param string $name
-     * @return array|mixed
+     * @return array|null
      */
     public function getHeader($name)
     {
-        if (!$this->headers->has($name)) {
-            return [];
-        }
-
-        return $this->headers->get($name);
+        return $this->headers->get($name) ?: null;
     }
 
     /**
@@ -100,7 +96,7 @@ class Message implements MessageInterface
     public function getHeaderLine($name)
     {
         $header = $this->getHeader($name);
-        if ($header) {
+        if ($header && is_array($header)) {
             return implode(', ', $header);
         } else {
             return '';
@@ -109,7 +105,7 @@ class Message implements MessageInterface
 
     /**
      * @param string $name
-     * @param string|\string[] $value
+     * @param string|string[] $value
      * @return static
      */
     public function withHeader($name, $value)
@@ -125,7 +121,7 @@ class Message implements MessageInterface
 
     /**
      * @param string $name
-     * @param string|\string[] $value
+     * @param string|string[] $value
      * @return static
      */
     public function withAddedHeader($name, $value)
