@@ -102,7 +102,7 @@ class Uri implements UriInterface
     {
         $parts = parse_url($str);
         if ($parts === false) {
-            throw new \InvalidArgumentException("String: $str is not a valid URI string.");
+            throw new \InvalidArgumentException("{$str} is not a valid URI string.");
         }
 
         return static::createFromParts($parts);
@@ -145,10 +145,10 @@ class Uri implements UriInterface
             $this->path = $this->filterPath($parts['path']);
         }
         if (!empty($parts['query'])) {
-            $this->query = $this->filterQueryAndFragment($parts['query']);
+            $this->query = $this->filterQuery($parts['query']);
         }
         if (!empty($parts['fragment'])) {
-            $this->fragment = $this->filterQueryAndFragment($parts['fragment']);
+            $this->fragment = $this->filterFragment($parts['fragment']);
         }
 
         $this->removeDefaultPort();
@@ -521,7 +521,7 @@ class Uri implements UriInterface
      */
     public function withQuery($query)
     {
-        $query = $this->filterQueryAndFragment($query);
+        $query = $this->filterQuery($query);
         if ($this->query === $query) {
             return $this;
         }
@@ -538,7 +538,7 @@ class Uri implements UriInterface
      */
     public function withFragment($fragment)
     {
-        $fragment = $this->filterQueryAndFragment($fragment);
+        $fragment = $this->filterFragment($fragment);
         if ($this->fragment === $fragment) {
             return $this;
         }
@@ -623,7 +623,20 @@ class Uri implements UriInterface
      * @param $str
      * @return mixed
      */
-    private function filterQueryAndFragment($str)
+    private function filterQuery($str)
+    {
+        if (!is_string($str)) {
+            throw new \InvalidArgumentException('Query and fragment must be a string');
+        }
+        parse_str($str, $queryParams);
+        return http_build_query($queryParams, null, '&', PHP_QUERY_RFC3986);
+    }
+
+    /**
+     * @param $str
+     * @return mixed
+     */
+    private function filterFragment($str)
     {
         if (!is_string($str)) {
             throw new \InvalidArgumentException('Query and fragment must be a string');
