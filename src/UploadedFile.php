@@ -55,12 +55,20 @@ class UploadedFile implements UploadedFileInterface
      */
     private $size;
     /**
-     * @var StreamInterface|null
+     * @var StreamInterface
      */
     private $stream;
 
 
-    public function __construct($streamOrFile, $size, $errorStatus, $clientFilename = null, $clientMediaType = null)
+    /**
+     * UploadedFile constructor.
+     * @param $stream
+     * @param $size
+     * @param $errorStatus
+     * @param null $clientFilename
+     * @param null $clientMediaType
+     */
+    public function __construct($stream, $size, $errorStatus, $clientFilename = null, $clientMediaType = null)
     {
         $this->setSize($size)
              ->setError($errorStatus)
@@ -68,25 +76,25 @@ class UploadedFile implements UploadedFileInterface
              ->setClientMediaType($clientMediaType);
 
         if ($this->isOk()) {
-            $this->setStreamOrFile($streamOrFile);
+            $this->setStream($stream);
         }
     }
 
     /**
      * Depending on the value set file or stream variable
      *
-     * @param mixed $streamOrFile
+     * @param mixed $stream
      * @return $this
      * @throws InvalidArgumentException
      */
-    private function setStreamOrFile($streamOrFile)
+    private function setStream($stream)
     {
-        if (is_string($streamOrFile)) {
-            $this->file = $streamOrFile;
-        } elseif (is_resource($streamOrFile)) {
-            $this->stream = new Stream($streamOrFile);
-        } elseif ($streamOrFile instanceof StreamInterface) {
-            $this->stream = $streamOrFile;
+        if ($stream instanceof StreamInterface) {
+            $this->stream = $stream;
+        } elseif (is_resource($stream)) {
+            $this->stream = new Stream($stream);
+        } elseif (is_string($stream)) {
+            $this->file = $stream;
         } else {
             throw new InvalidArgumentException('Invalid stream or file provided for UploadedFile');
         }
@@ -221,9 +229,11 @@ class UploadedFile implements UploadedFileInterface
         $this->validateActive();
         if ($this->stream instanceof StreamInterface) {
             return $this->stream;
+        } elseif (is_readable($this->file)) {
+            return $this->stream = StreamHelper::createStream(fopen($this->file, 'r+'));
+        } else {
+            throw new RuntimeException("{$this->file} is not exist or unreadable.");
         }
-
-        return StreamHelper::createStream(fopen($this->file, 'r+'));
     }
 
     /**
@@ -237,7 +247,7 @@ class UploadedFile implements UploadedFileInterface
         }
 
         if ($this->file) {
-            $this->moved = PHP_SAPI === 'cli'
+            $this->moved = (PHP_SAPI === 'cli')
                 ? rename($this->file, $targetPath)
                 : move_uploaded_file($this->file, $targetPath);
         } else {
@@ -245,6 +255,7 @@ class UploadedFile implements UploadedFileInterface
             StreamHelper::copyStream($this->getStream(), $destStream);
             $this->moved = true;
         }
+
         if (false === $this->moved) {
             throw new RuntimeException("Uploaded file could not be moved to {$targetPath}");
         }

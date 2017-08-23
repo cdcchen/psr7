@@ -45,8 +45,8 @@ class Request extends Message implements RequestInterface, RequestMethodInterfac
     {
         $this->method = strtoupper($method);
         $this->uri = ($uri instanceof UriInterface) ? $uri : new Uri($uri);
-        $this->setHeaders($headers ?: new HeaderCollection());
 
+        $this->setHeaders($headers ?: new HeaderCollection());
         if (!$this->hasHeader('Host')) {
             $this->updateHostFromUri();
         }
