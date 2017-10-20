@@ -255,27 +255,28 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function __toString()
     {
-        $header = '';
+        $headerLines = [];
         foreach ($this->headers as $name => $value) {
             if (static::normalizeName($name) === 'set-cookie') {
-                $header .= array_reduce($value, function ($carry, $item) use ($name) {
-                    $carry .= Message::HEADER_LINE_EOF . "{$name}: {$item}";
-                    return $carry;
-                });
+                $headerLines[] = array_map(function ($item) use ($name) {
+                    return "{$name}: {$item}";
+                }, $value);
             } else {
-                $header .= Message::HEADER_LINE_EOF . $name . ': ' . implode(', ', $value);
+                $headerLines[] = $name . ': ' . implode(', ', $value);
             }
         }
 
-        return $header;
+        return join(Message::HEADER_LINE_EOF, $headerLines);
     }
 
     /**
      * @param array $values
      * @return array
      */
-    public static function filterHeaderValues(array $values)
-    {
+    public
+    static function filterHeaderValues(
+        array $values
+    ) {
         array_walk($values, function (&$value) {
             $value = trim($value, " \t");
         });
@@ -286,8 +287,10 @@ class HeaderCollection implements \ArrayAccess, \Countable, \IteratorAggregate
      * @param string $name
      * @return string
      */
-    private static function normalizeName($name)
-    {
+    private
+    static function normalizeName(
+        $name
+    ) {
         return strtolower($name);
     }
 }
