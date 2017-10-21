@@ -145,10 +145,10 @@ class Uri implements UriInterface
             $this->path = $this->filterPath($parts['path']);
         }
         if (!empty($parts['query'])) {
-            $this->query = $this->filterQuery($parts['query']);
+            $this->query = $this->filterQueryFragment($parts['query']);
         }
         if (!empty($parts['fragment'])) {
-            $this->fragment = $this->filterFragment($parts['fragment']);
+            $this->fragment = $this->filterQueryFragment($parts['fragment']);
         }
 
         $this->removeDefaultPort();
@@ -521,7 +521,7 @@ class Uri implements UriInterface
      */
     public function withQuery($query)
     {
-        $query = $this->filterQuery($query);
+        $query = $this->filterQueryFragment($query);
         if ($this->query === $query) {
             return $this;
         }
@@ -538,7 +538,7 @@ class Uri implements UriInterface
      */
     public function withFragment($fragment)
     {
-        $fragment = $this->filterFragment($fragment);
+        $fragment = $this->filterQueryFragment($fragment);
         if ($this->fragment === $fragment) {
             return $this;
         }
@@ -623,20 +623,7 @@ class Uri implements UriInterface
      * @param $str
      * @return mixed
      */
-    private function filterQuery($str)
-    {
-        if (!is_string($str)) {
-            throw new \InvalidArgumentException('Query and fragment must be a string');
-        }
-        parse_str($str, $queryParams);
-        return http_build_query($queryParams, null, '&', PHP_QUERY_RFC3986);
-    }
-
-    /**
-     * @param $str
-     * @return mixed
-     */
-    private function filterFragment($str)
+    private function filterQueryFragment($str)
     {
         if (!is_string($str)) {
             throw new \InvalidArgumentException('Query and fragment must be a string');
