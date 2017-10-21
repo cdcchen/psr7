@@ -54,4 +54,37 @@ class MultipartStreamTest extends TestCase
         $expected .= "--{$boundary}--\r\n";
         $this->assertEquals($expected, (string)$stream);
     }
+
+    /**
+     * @param MultipartStream $stream
+     * @depends testInstance
+     */
+    public function testStreamFilename(MultipartStream $stream)
+    {
+        $boundary = static::$boundary;
+
+        $file1 = __DIR__ . '/file1.txt';
+        $file2 = __DIR__ . '/file2.txt';
+        $fp1 = fopen($file1, 'rb');
+        $fp2 = fopen($file2, 'rb');
+        $part1 = new FormDataPart('test_file1', StreamHelper::createStream($fp1));
+        $part2 = new FormDataPart('test_file2', StreamHelper::createStream($fp2), 'upfile.txt');
+
+        $stream = new MultipartStream([$part1, $part2], static::$boundary);
+
+        $expected = "--{$boundary}\r\n";
+        $expected .= "Content-Disposition: form-data; name=\"test_file1\"; filename=\"file1.txt\"\r\n";
+        $content1 = file_get_contents($file1);
+        $length = strlen($content1);
+        $expected .= "Content-Length: $length\r\n\r\n{$content1}\r\n";
+
+        $expected .= "--{$boundary}\r\n";
+        $expected .= "Content-Disposition: form-data; name=\"test_file2\"; filename=\"upfile.txt\"\r\n";
+        $content2 = file_get_contents($file2);
+        $length = strlen($content2);
+        $expected .= "Content-Length: $length\r\n\r\n{$content2}\r\n";
+
+        $expected .= "--{$boundary}--\r\n";
+        $this->assertEquals($expected, (string)$stream);
+    }
 }

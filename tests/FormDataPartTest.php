@@ -47,7 +47,7 @@ class FormDataPartTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $stream = StreamHelper::createStream(__CLASS__);
-        new FormDataPart('inputName', $stream, 'asdfasdf');
+        new FormDataPart('inputName', $stream, null,'asdfasdf');
     }
 
     public function test__toString()

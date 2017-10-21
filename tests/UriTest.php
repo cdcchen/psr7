@@ -93,10 +93,7 @@ class UriTest extends TestCase
      */
     public function testQueryIsOk(Uri $uri)
     {
-        $expect = http_build_query([
-            'a' => 'b&d',
-            'b' => [2, 3, 3 => 4],
-        ], null, '&', PHP_QUERY_RFC3986);
+        $expect = 'a=b%26d&b%5B%5D=2&b%5B%5D=3&b%5B3%5D=4';
         $this->assertEquals($expect, $uri->getQuery());
     }
 

@@ -26,6 +26,10 @@ class FormDataPart
      */
     private $stream;
     /**
+     * @var string
+     */
+    private $filename;
+    /**
      * @var HeaderCollection
      */
     private $headers;
@@ -34,9 +38,10 @@ class FormDataPart
      * FormDataPart constructor.
      * @param string $name
      * @param StreamInterface $stream
+     * @param string $filename
      * @param HeaderCollection|array|null $headers
      */
-    public function __construct($name, StreamInterface $stream, $headers = null)
+    public function __construct($name, StreamInterface $stream, $filename = null, $headers = null)
     {
         if (empty($name) || !is_string($name)) {
             throw new \InvalidArgumentException('name must be a not empty string.');
@@ -54,6 +59,7 @@ class FormDataPart
 
         $this->name = $name;
         $this->stream = $stream;
+        $this->filename = $filename;
 
         $this->handleHeaders();
     }
@@ -64,7 +70,17 @@ class FormDataPart
     protected function handleHeaders()
     {
         if (!$this->headers->has('Content-Disposition')) {
-            $this->headers->set('Content-Disposition', "form-data; name=\"{$this->name}\"");
+            $contentDisposition = "form-data; name=\"{$this->name}\"";
+            if (empty($this->filename)) {
+                $uri = $this->stream->getMetadata('uri');
+                if ($uri && strncasecmp($uri, 'php://', 6) !== 0) {
+                    $this->filename = basename($uri);
+                }
+            }
+            if ($this->filename) {
+                $contentDisposition .= "; filename=\"{$this->filename}\"";
+            }
+            $this->headers->set('Content-Disposition', $contentDisposition);
         }
 
         if (!$this->headers->has('Content-Length')) {
