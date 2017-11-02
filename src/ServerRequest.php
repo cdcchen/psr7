@@ -10,6 +10,8 @@ namespace cdcchen\psr7;
 
 
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use InvalidArgumentException;
 
 /**
  * Class ServerRequest
@@ -130,9 +132,16 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * @param array $uploadedFiles
      * @return static
+     * @throws InvalidArgumentException
      */
     public function withUploadedFiles(array $uploadedFiles)
     {
+        foreach ($uploadedFiles as $file) {
+            if (!($file instanceof UploadedFileInterface)) {
+                throw new InvalidArgumentException('Invalid instance of UploadedFileInterface');
+            }
+        }
+
         $new = clone $this;
         $new->uploadedFiles = $uploadedFiles;
 
